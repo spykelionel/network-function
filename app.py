@@ -1,8 +1,9 @@
 import itertools
 import time
 
-queue = ['p1', 'p2', 'p3', 'p4', 'p5'] # Represents a list of processes
+from asyncio import Event
 
+queue = ['p1', 'p2', 'p3', 'p4', 'p5'] # Represents a list of processes
 
 # Server state
 class ServerState:
@@ -97,7 +98,6 @@ class LoadBalancer:
             print(f"Redirecting request to Server {next_server['name']}")
             index = servers.index(next_server)
             server = next_server
-            load = server['load']
             server['load'] = float(server['load'])+.10
             servers.remove(next_server)
             servers.insert(index, server)
@@ -107,32 +107,74 @@ class LoadBalancer:
 def simulate_requests(load_balancer, num_requests):
     for _ in range(num_requests):
         load_balancer.balance_request()
-        time.sleep(1)  # Simulating processing time for each request
+        time.sleep(1)  # Simulating processing time for each request    
 
+class Priority:
+    low = "low"
+    high = "high"
+    medium = "medium"
+
+class Message:
+    def __init__(self, action, payload, events, priority=Priority.low) -> None:
+        self.action: str = action
+        self.payload: any = payload
+        self.events: list = events
+        self.priority: Priority = priority
+        pass
+
+class Producer:
+    messages = []
+
+    def produce(self, message: Message):
+        if(type(message) is not Message):
+            raise Exception("message must be of type message")
+        self.messages.append(message)
+        return
+    def get(self):
+        return itertools.cycle(self.messages)
+    pass
+
+class Consumer:
+    pass
+
+
+class Todo:
+    todos = []
+    def create(self, text)->str:
+        status = "success"
+        try:
+            self.todos.append(text)
+            status = "success"
+        except:
+            status = "failed"
+            raise Exception("Can't create todo")
+        
+        return status
+    
+    def get(self):
+        return self.todos
+
+# Global producer
+producer = Producer()
+
+# global consumer
+consumer = Consumer()
 if __name__ == "__main__":
     # Define a list of server IDs (replace these with actual server addresses)
     server_list = servers
 
-    print("Before load balancing: ")
-    for server in servers:
-        print(f"SERVER {server['name']}: STATE {server['state']}, LOAD {server['load']*100}%")
-    # Create a LoadBalancer instance
-    load_balancer = LoadBalancer(server_list)
-
-    # Simulate requests being balanced by the load balancer
-    simulate_requests(load_balancer, num_requests=10)
+    message = Message(action="create", payload="My todo", events=[])
+    producer.produce(message)
+    messages = producer.messages
+    todo = Todo()
     
-    print("After load balancing: ")
-    for server in servers:
-        print(f"SERVER {server['name']}: STATE {server['state']}, LOAD {server['load']*100}%")
-    # scheduler = Scheduler(queue)
+    # This task needs to be handled my a consumer e.g consumer.consume(message) in a list of messages
+    for m in messages:
+        if m.action == "create":
+            res = todo.create(m.payload)
+            if res == "success":
+                pass
+            else: print("can not create todo")
 
-    # print(servers)
-
-    
-
-    # for _ in range(len(queue)):
-    #     process = scheduler.exec()
-    #     scheduler.dispatch(process)
-        
+    print(todo.get())
 
