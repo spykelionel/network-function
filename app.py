@@ -135,6 +135,28 @@ class Producer:
     pass
 
 class Consumer:
+    def __init__(self, name) -> None:
+        self.name = name
+        # TODO: add handler class here. Handler class should be generic,
+        pass
+
+    def consume(self, message: Message):
+        if message.action == "create":
+            # Handle create actions here.
+            Todo.create(message.payload)
+            Logger.log(f"Action {message.action} completed for {message}")
+            pass
+
+        elif message.action == "delete":
+            # handle delete actions here
+            Todo.remove(message.payload)
+            pass
+        elif message.action == "get":
+            # handle get action here.
+            Todo.get()
+            Logger.log(f"Action {message.action} completed for {message}")
+            pass
+        pass
     pass
 
 
