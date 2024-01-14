@@ -3,6 +3,58 @@ import time
 
 queue = ['p1', 'p2', 'p3', 'p4', 'p5'] # Represents a list of processes
 
+
+# Server state
+class ServerState:
+    free = "free"
+    normal = "normal"
+    busy = "busy"
+    pass
+
+# Define type server
+class Server:
+    name: str
+    address: str
+    load: float
+    state: ServerState = ServerState.free
+
+
+server1: Server = {
+    'name': 'Neutron',
+    'address': 'serv1',
+    'load': 0.4,
+    'state': ServerState.free
+}
+
+server2: Server = {
+    'name': 'Muxyron',
+    'address': 'serv2',
+    'load': 0.24,
+    'state': ServerState.free
+}
+server3: Server = {
+    'name': 'Seluonx',
+    'address': 'serv3',
+    'load': 0.89,
+    'state': ServerState.busy
+}
+server4: Server = {
+    'name': 'Xaerin',
+    'address': 'serv4',
+    'load': 0.45,
+    'state': ServerState.normal
+}
+
+server5: Server = {
+    'name': 'Plusxin',
+    'address': 'serv5',
+    'load': 0.85,
+    'state': ServerState.busy
+}
+
+# Now a list of servers
+servers = [server1, server2, server3, server4, server5] 
+
 class Scheduler:
     '''
     A simple round-robin scheduler
