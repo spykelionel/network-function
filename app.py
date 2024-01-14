@@ -60,7 +60,7 @@ class Scheduler:
     A simple round-robin scheduler
     '''
     def __init__(self, queue) -> None:
-        self.processes = itertools.cycle(queue) # Hold on to the processes in the queue, return them one after the other.
+        self.processes = itertools.cycle(queue) # Hold on to the processes in the queue.
         self.slice_time = 10 # Set the slice time or quantum time to 10ms 
         return None
     
