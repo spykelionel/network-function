@@ -178,15 +178,15 @@ class Todo:
         
         return status
     
-    def get(self):
+    def get():
         Logger.log(f"Returning all todos")
-        return self.todos
+        return todos
     
-    def get_single(self, idx):
+    def get_single(idx):
         Logger.log(f"Returning Todo({idx})")
         return todos[idx]
 
-    def remove(self, todo):
+    def remove(todo):
         Logger.log(f"Removing Todo({todo})")
         todos.remove(todo)
         return
