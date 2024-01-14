@@ -55,6 +55,7 @@ server5: Server = {
 # Now a list of servers
 servers = [server1, server2, server3, server4, server5] 
 
+
 class Scheduler:
     '''
     A simple round-robin scheduler
@@ -77,16 +78,31 @@ class Scheduler:
     def get_process(self):
         return next(self.processes)
 
-
+# An intelligent load balancer. Distributes load across servers base on their current state
 class LoadBalancer:
     def __init__(self, servers):
-        self.servers = servers
-        self.server_cycle = itertools.cycle(servers)
+        self.servers = itertools.cycle(servers)
+        pass
 
     def balance_request(self):
-        # Get the next server in the round-robin cycle
-        next_server = next(self.server_cycle)
-        print(f"Redirecting request to Server {next_server}")
+        '''
+        Get the next server in the round-robin cycle.
+        If server is normal or free, pass the request on to the server.
+        '''
+        global servers
+        next_server = next(self.servers)
+
+        if next_server['state'] is ServerState.free or next_server['state'] is ServerState.normal:
+            # For this scenario, let's say a request adds a 10% load to the server.
+            print(f"Redirecting request to Server {next_server['name']}")
+            index = servers.index(next_server)
+            server = next_server
+            load = server['load']
+            server['load'] = float(server['load'])+.10
+            servers.remove(next_server)
+            servers.insert(index, server)
+            print(f"Server state: {next_server['state']}")
+            pass
 
 def simulate_requests(load_balancer, num_requests):
     for _ in range(num_requests):
@@ -95,18 +111,28 @@ def simulate_requests(load_balancer, num_requests):
 
 if __name__ == "__main__":
     # Define a list of server IDs (replace these with actual server addresses)
-    # server_list = [1, 2, 3, 4]
+    server_list = servers
 
-    # # Create a LoadBalancer instance
-    # load_balancer = LoadBalancer(server_list)
+    print("Before load balancing: ")
+    for server in servers:
+        print(f"SERVER {server['name']}: STATE {server['state']}, LOAD {server['load']*100}%")
+    # Create a LoadBalancer instance
+    load_balancer = LoadBalancer(server_list)
 
-    # # Simulate requests being balanced by the load balancer
-    # simulate_requests(load_balancer, num_requests=10)
+    # Simulate requests being balanced by the load balancer
+    simulate_requests(load_balancer, num_requests=10)
     
-    scheduler = Scheduler(queue)
+    print("After load balancing: ")
+    for server in servers:
+        print(f"SERVER {server['name']}: STATE {server['state']}, LOAD {server['load']*100}%")
+    # scheduler = Scheduler(queue)
 
-    for i in range(len(queue)):
-        process = scheduler.exec()
-        scheduler.dispatch(process)
+    # print(servers)
+
+    
+
+    # for _ in range(len(queue)):
+    #     process = scheduler.exec()
+    #     scheduler.dispatch(process)
         
 
