@@ -2,6 +2,7 @@ import itertools
 import time
 
 from asyncio import Event
+from typing import Generic, TypeVar
 
 queue = ['p1', 'p2', 'p3', 'p4', 'p5'] # Represents a list of processes
 
@@ -122,8 +123,9 @@ class Message:
         self.priority: Priority = priority
         pass
 
+todos = []
 class Producer:
-    messages = []
+    messages: [Message] = []
 
     def produce(self, message: Message):
         if(type(message) is not Message):
@@ -134,7 +136,8 @@ class Producer:
         return itertools.cycle(self.messages)
     pass
 
-class Consumer:
+# T = TypeVar('T')
+class Consumer():
     def __init__(self, name) -> None:
         self.name = name
         # TODO: add handler class here. Handler class should be generic,
@@ -143,7 +146,7 @@ class Consumer:
     def consume(self, message: Message):
         if message.action == "create":
             # Handle create actions here.
-            Todo.create(message.payload)
+            Todo.create(text=message.payload)
             Logger.log(f"Action {message.action} completed for {message}")
             pass
 
@@ -161,26 +164,47 @@ class Consumer:
 
 
 class Todo:
-    todos = []
-    def create(self, text)->str:
+    global todos
+    def create(text):
         status = "success"
         try:
-            self.todos.append(text)
+            todos.append(text)
+            Logger.log(message=f"Todo({text}) has been created")
             status = "success"
         except:
             status = "failed"
+            Logger.log(message=f"Unable to create Todo({text})")
             raise Exception("Can't create todo")
         
         return status
     
     def get(self):
+        Logger.log(f"Returning all todos")
         return self.todos
+    
+    def get_single(self, idx):
+        Logger.log(f"Returning Todo({idx})")
+        return todos[idx]
+
+    def remove(self, todo):
+        Logger.log(f"Removing Todo({todo})")
+        todos.remove(todo)
+        return
+
+
+class Logger:
+    def log(message):
+        # log to a file...
+        print(message)
 
 # Global producer
 producer = Producer()
 
 # global consumer
-consumer = Consumer()
+consumer = Consumer(name="Todo Consumer")
+
+# global logger
+logger = Logger()
 if __name__ == "__main__":
     # Define a list of server IDs (replace these with actual server addresses)
     server_list = servers
@@ -188,15 +212,10 @@ if __name__ == "__main__":
     message = Message(action="create", payload="My todo", events=[])
     producer.produce(message)
     messages = producer.messages
-    todo = Todo()
     
     # This task needs to be handled my a consumer e.g consumer.consume(message) in a list of messages
     for m in messages:
-        if m.action == "create":
-            res = todo.create(m.payload)
-            if res == "success":
-                pass
-            else: print("can not create todo")
+        consumer.consume(message=m)
 
-    print(todo.get())
+    print(todos)
 
