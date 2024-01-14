@@ -2,7 +2,7 @@ import itertools
 import time
 
 from asyncio import Event
-from typing import Generic, TypeVar
+from typing import Generic, List, NamedTuple, Type, TypeVar
 
 queue = ['p1', 'p2', 'p3', 'p4', 'p5'] # Represents a list of processes
 
@@ -110,54 +110,60 @@ def simulate_requests(load_balancer, num_requests):
         load_balancer.balance_request()
         time.sleep(1)  # Simulating processing time for each request    
 
-class Priority:
+class Priority(NamedTuple):
     low = "low"
     high = "high"
     medium = "medium"
+    pass
 
-class Message:
-    def __init__(self, action, payload, events, priority=Priority.low) -> None:
-        self.action: str = action
-        self.payload: any = payload
-        self.events: list = events
-        self.priority: Priority = priority
-        pass
+class Message(NamedTuple):
+    action: str 
+    payload: any  # payload should be generic. Type should be inferred at runtime
+    events: List = []
+    priority: Priority = Priority.low
+    pass
 
 todos = []
 class Producer:
-    messages: [Message] = []
+    messages: List[Message] = []
 
     def produce(self, message: Message):
         if(type(message) is not Message):
-            raise Exception("message must be of type message")
+            raise TypeError("message must be of type message")
         self.messages.append(message)
         return
     def get(self):
         return itertools.cycle(self.messages)
     pass
 
-# T = TypeVar('T')
-class Consumer():
-    def __init__(self, name) -> None:
+T = TypeVar('T')
+
+class Consumer(Generic[T]):
+    def __init__(self, name, handler: Type[T]) -> None:
+        print(f"Inititiating hanldler for {handler.__name__}")
         self.name = name
-        # TODO: add handler class here. Handler class should be generic,
+        self.handler = handler() # instantiate handler. Handler has args?
         pass
 
     def consume(self, message: Message):
         if message.action == "create":
             # Handle create actions here.
-            Todo.create(text=message.payload)
+            self.handler.create(text=message.payload)
             Logger.log(f"Action {message.action} completed for {message}")
             pass
 
         elif message.action == "delete":
             # handle delete actions here
-            Todo.remove(message.payload)
+            self.handler.remove(message.payload)
+            Logger.log(f"Action {message.action} completed for {message}")
             pass
         elif message.action == "get":
             # handle get action here.
             Todo.get()
             Logger.log(f"Action {message.action} completed for {message}")
+            pass
+        else:
+            Logger.log(f"Action {message.action} Not found.")
             pass
         pass
     pass
@@ -165,7 +171,7 @@ class Consumer():
 
 class Todo:
     global todos
-    def create(text):
+    def create(self, text):
         status = "success"
         try:
             todos.append(text)
@@ -178,15 +184,15 @@ class Todo:
         
         return status
     
-    def get():
+    def get(self):
         Logger.log(f"Returning all todos")
         return todos
     
-    def get_single(idx):
+    def get_single(self, idx):
         Logger.log(f"Returning Todo({idx})")
         return todos[idx]
 
-    def remove(todo):
+    def remove(self, todo):
         Logger.log(f"Removing Todo({todo})")
         todos.remove(todo)
         return
@@ -201,20 +207,23 @@ class Logger:
 producer = Producer()
 
 # global consumer
-consumer = Consumer(name="Todo Consumer")
+consumer = Consumer(name="Todo Consumer", handler=Todo)
 
-# global logger
-logger = Logger()
 if __name__ == "__main__":
-    # Define a list of server IDs (replace these with actual server addresses)
-    server_list = servers
-
-    message = Message(action="create", payload="My todo", events=[])
+    message = Message(action="create", payload="My todo")
+    message2 = Message(action="create", payload="Second Todo")
+    message3 = Message(action="create", payload="Last todo")
+    message4 = Message(action="delete", payload="My todo")
     producer.produce(message)
-    messages = producer.messages
+    # producer.produce(message=message2)
+    # producer.produce(message=message3)
+    # producer.produce(message=message4)
+    messages = itertools.cycle(producer.messages)
     
     # This task needs to be handled my a consumer e.g consumer.consume(message) in a list of messages
-    for m in messages:
+    for _ in range(len(producer.messages)):
+        print(todos)
+        m = next(messages)
         consumer.consume(message=m)
 
     print(todos)
