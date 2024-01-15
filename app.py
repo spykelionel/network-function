@@ -7,14 +7,14 @@ from typing import Generic, List, NamedTuple, Type, TypeVar
 queue = ['p1', 'p2', 'p3', 'p4', 'p5'] # Represents a list of processes
 
 # Server state
-class ServerState:
+class ServerState(NamedTuple):
     free = "free"
     normal = "normal"
     busy = "busy"
     pass
 
 # Define type server
-class Server:
+class Server(NamedTuple):
     name: str
     address: str
     load: float
